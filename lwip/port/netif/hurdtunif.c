@@ -344,7 +344,7 @@ void (*trivfs_protid_destroy_hook) (struct trivfs_protid *) = pi_destroy_hook;
 /* Read data from an IO object.  If offset is -1, read from the object
    maintained file pointer.  If the object is not seekable, offset is
    ignored.  The amount desired to be read is in AMOUNT.  */
-error_t
+kern_return_t
 trivfs_S_io_read (struct trivfs_protid *cred,
 		  mach_port_t reply, mach_msg_type_name_t reply_type,
 		  data_t *data, mach_msg_type_number_t * data_len,
@@ -417,7 +417,7 @@ trivfs_S_io_read (struct trivfs_protid *cred,
    object at a time; servers implement congestion control by delaying
    responses to io_write.  Servers may drop data (returning ENOBUFS)
    if they receive more than one write when not prepared for it.  */
-error_t
+kern_return_t
 trivfs_S_io_write (struct trivfs_protid * cred,
 		   mach_port_t reply,
 		   mach_msg_type_name_t replytype,
@@ -513,13 +513,13 @@ trivfs_S_io_readable (struct trivfs_protid * cred,
    return the types that are then available.  ID_TAG is returned as passed; it
    is just for the convenience of the user in matching up reply messages with
    specific requests sent.  */
-static error_t
+static kern_return_t
 io_select_common (struct trivfs_protid *cred,
 		  mach_port_t reply,
 		  mach_msg_type_name_t reply_type,
 		  struct timespec *tsp, int *type)
 {
-  error_t err;
+  kern_return_t err;
   struct hurdtunif *tunif;
 
   if (!cred)
@@ -579,7 +579,7 @@ io_select_common (struct trivfs_protid *cred,
     }
 }
 
-error_t
+kern_return_t
 trivfs_S_io_select (struct trivfs_protid * cred,
 		    mach_port_t reply,
 		    mach_msg_type_name_t reply_type, int *type)
@@ -587,7 +587,7 @@ trivfs_S_io_select (struct trivfs_protid * cred,
   return io_select_common (cred, reply, reply_type, NULL, type);
 }
 
-error_t
+kern_return_t
 trivfs_S_io_select_timeout (struct trivfs_protid * cred,
 			    mach_port_t reply,
 			    mach_msg_type_name_t reply_type,
@@ -597,7 +597,7 @@ trivfs_S_io_select_timeout (struct trivfs_protid * cred,
 }
 
 /* Change current read/write offset */
-error_t
+kern_return_t
 trivfs_S_io_seek (struct trivfs_protid * cred,
 		  mach_port_t reply, mach_msg_type_name_t reply_type,
 		  off_t offs, int whence, off_t * new_offs)
@@ -614,7 +614,7 @@ trivfs_S_io_seek (struct trivfs_protid * cred,
 /* Change the size of the file.  If the size increases, new blocks are
    zero-filled.  After successful return, it is safe to reference mapped
    areas of the file up to NEW_SIZE.  */
-error_t
+kern_return_t
 trivfs_S_file_set_size (struct trivfs_protid * cred,
 			mach_port_t reply, mach_msg_type_name_t reply_type,
 			off_t size)
@@ -633,7 +633,7 @@ trivfs_S_file_set_size (struct trivfs_protid * cred,
    will tell you which of O_READ, O_WRITE, and O_EXEC the object can
    be used for.  The O_ASYNC bit affects icky async I/O; good async
    I/O is done through io_async which is orthogonal to these calls. */
-error_t
+kern_return_t
 trivfs_S_io_set_all_openmodes (struct trivfs_protid * cred,
 			       mach_port_t reply,
 			       mach_msg_type_name_t reply_type, int mode)
@@ -647,7 +647,7 @@ trivfs_S_io_set_all_openmodes (struct trivfs_protid * cred,
   return 0;
 }
 
-error_t
+kern_return_t
 trivfs_S_io_set_some_openmodes (struct trivfs_protid * cred,
 				mach_port_t reply,
 				mach_msg_type_name_t reply_type, int bits)
@@ -661,7 +661,7 @@ trivfs_S_io_set_some_openmodes (struct trivfs_protid * cred,
   return 0;
 }
 
-error_t
+kern_return_t
 trivfs_S_io_clear_some_openmodes (struct trivfs_protid * cred,
 				  mach_port_t reply,
 				  mach_msg_type_name_t reply_type, int bits)
@@ -675,7 +675,7 @@ trivfs_S_io_clear_some_openmodes (struct trivfs_protid * cred,
   return 0;
 }
 
-error_t
+kern_return_t
 trivfs_S_io_get_owner (struct trivfs_protid * cred,
 		       mach_port_t reply,
 		       mach_msg_type_name_t reply_type, pid_t * owner)
@@ -690,7 +690,7 @@ trivfs_S_io_get_owner (struct trivfs_protid * cred,
   return 0;
 }
 
-error_t
+kern_return_t
 trivfs_S_io_mod_owner (struct trivfs_protid * cred,
 		       mach_port_t reply, mach_msg_type_name_t reply_type,
 		       pid_t owner)
@@ -712,7 +712,7 @@ trivfs_S_io_mod_owner (struct trivfs_protid * cred,
    implement io_map but not io_map_cntl.  Some objects do not provide
    mapping; they will set none of the ports and return an error.  Such
    objects can still be accessed by io_read and io_write.  */
-error_t
+kern_return_t
 trivfs_S_io_map (struct trivfs_protid * cred,
 		 mach_port_t reply,
 		 mach_msg_type_name_t replyPoly,
