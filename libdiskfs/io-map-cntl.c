@@ -32,11 +32,27 @@ diskfs_S_io_map_cntl (struct protid *cred,
   pthread_mutex_lock (&cred->po->np->lock);
   if (!cred->mapped)
     {
-      default_pager_object_create (diskfs_default_pager, &cred->shared_object,
-				   __vm_page_size);
-      vm_map (mach_task_self (), (vm_address_t *)&cred->mapped, vm_page_size,
-	      0, 1, cred->shared_object, 0, 0,
-	      VM_PROT_READ|VM_PROT_WRITE, VM_PROT_READ|VM_PROT_WRITE, 0);
+      error_t err = default_pager_object_create (diskfs_default_pager,
+						 &cred->shared_object,
+						 __vm_page_size);
+      if (err)
+	{
+	  pthread_mutex_unlock (&cred->po->np->lock);
+	  return err;
+	}
+
+      err = vm_map (mach_task_self (), (vm_address_t *)&cred->mapped,
+		    vm_page_size, 0, 1, cred->shared_object, 0, 0,
+		    VM_PROT_READ|VM_PROT_WRITE,
+		    VM_PROT_READ|VM_PROT_WRITE, 0);
+      if (err)
+	{
+	  mach_port_deallocate (mach_task_self (), cred->shared_object);
+	  cred->shared_object = MACH_PORT_NULL;
+	  pthread_mutex_unlock (&cred->po->np->lock);
+	  return err;
+	}
+
       cred->mapped->shared_page_magic = SHARED_PAGE_MAGIC;
       cred->mapped->conch_status = USER_HAS_NOT_CONCH;
       pthread_spin_init (&cred->mapped->lock, PTHREAD_PROCESS_PRIVATE);

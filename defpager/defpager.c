@@ -56,6 +56,10 @@ expand_map (struct user_pager_info *p, vm_offset_t addr)
   return 0;
 }
 
+/* The user must define this function.  For pager PAGER, read one
+   page from offset PAGE.  Set *BUF to be the address of the page,
+   and set *WRITE_LOCK if the page must be provided read-only.
+   The only permissible error returns are EIO, EDQUOT, and ENOSPC.  */
 error_t
 pager_read_page (struct user_pager_info *pager,
 		 vm_offset_t page,
@@ -70,13 +74,13 @@ pager_read_page (struct user_pager_info *pager,
 
   error_t err = expand_map (pager, page);
   if (err)
-    return err;
+    return EIO;
 
   if (!pager->map[pfn])
     {
       err = vm_allocate (mach_task_self (), buf, vm_page_size, 1);
       if (err)
-	return err;
+	return EIO;
     }
   else
     {

@@ -557,9 +557,9 @@ diskfs_get_filemap (struct node *np, vm_prot_t prot)
       /* XXX we need to keep a reference to the object, or GNU Mach
 	 will terminate it when we release the map. */
       np->dn->u.reg.memref = 0;
-      vm_map (mach_task_self (), &np->dn->u.reg.memref, 4096, 0, 1,
-	      np->dn->u.reg.memobj, 0, 0, VM_PROT_NONE, VM_PROT_NONE,
-	      VM_INHERIT_NONE);
+      err = vm_map (mach_task_self (), &np->dn->u.reg.memref, 4096, 0, 1,
+		    np->dn->u.reg.memobj, 0, 0, VM_PROT_NONE, VM_PROT_NONE,
+		    VM_INHERIT_NONE);
       assert_perror_backtrace (err);
     }
 

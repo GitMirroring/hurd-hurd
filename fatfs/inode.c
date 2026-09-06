@@ -190,6 +190,9 @@ diskfs_user_read_node (struct node *np, struct lookup_context *ctx)
 	  err = vm_map (mach_task_self (),
 			&buf, buflen, 0, 1, memobj, 0, 0, prot, prot, 0);
 	  mach_port_deallocate (mach_task_self (), memobj);
+	  if (err)
+	    return err;
+
 	  our_buf = 1;
 	}
       

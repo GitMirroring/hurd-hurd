@@ -223,13 +223,19 @@ load_image (task_t t,
 	    ph->p_vaddr &= ~(ph->p_align - 1);
 	    ph->p_memsz -= ph->p_vaddr;
 
-	    vm_allocate (t, (vm_address_t*)&ph->p_vaddr, ph->p_memsz, 0);
-	    vm_write (t, ph->p_vaddr, buf, bufsz);
+	    err = vm_allocate (t, (vm_address_t*)&ph->p_vaddr,
+			       ph->p_memsz, 0);
+	    assert_backtrace (err == KERN_SUCCESS);
+
+	    err = vm_write (t, ph->p_vaddr, buf, bufsz);
+	    assert_backtrace (err == KERN_SUCCESS);
+
 	    munmap ((caddr_t) buf, bufsz);
-	    vm_protect (t, ph->p_vaddr, ph->p_memsz, 0,
-			((ph->p_flags & PF_R) ? VM_PROT_READ : 0) |
-			((ph->p_flags & PF_W) ? VM_PROT_WRITE : 0) |
-			((ph->p_flags & PF_X) ? VM_PROT_EXECUTE : 0));
+	    err = vm_protect (t, ph->p_vaddr, ph->p_memsz, 0,
+			      ((ph->p_flags & PF_R) ? VM_PROT_READ : 0) |
+			      ((ph->p_flags & PF_W) ? VM_PROT_WRITE : 0) |
+			      ((ph->p_flags & PF_X) ? VM_PROT_EXECUTE : 0));
+	    assert_backtrace (err == KERN_SUCCESS);
 	  }
       return hdr.e.e_entry;
     }
@@ -252,17 +258,25 @@ load_image (task_t t,
       lseek (fd, sizeof hdr.a - headercruft, SEEK_SET);
       err = read (fd, buf, amount);
       assert_backtrace (err == amount);
-      vm_allocate (t, &base, rndamount, 0);
-      vm_write (t, base, (vm_address_t) buf, rndamount);
+      err = vm_allocate (t, &base, rndamount, 0);
+      assert_backtrace (err == KERN_SUCCESS);
+
+      err = vm_write (t, base, (vm_address_t) buf, rndamount);
+      assert_backtrace (err == KERN_SUCCESS);
+
       if (magic != OMAGIC)
-	vm_protect (t, base, trunc_page (headercruft + hdr.a.a_text),
-		    0, VM_PROT_READ | VM_PROT_EXECUTE);
+	{
+	  err = vm_protect (t, base, trunc_page (headercruft + hdr.a.a_text),
+			    0, VM_PROT_READ | VM_PROT_EXECUTE);
+	  assert_backtrace (err == KERN_SUCCESS);
+	}
       munmap ((caddr_t) buf, rndamount);
 
       bssstart = base + hdr.a.a_text + hdr.a.a_data + headercruft;
       bsspagestart = round_page (bssstart);
-      vm_allocate (t, &bsspagestart,
-		   hdr.a.a_bss - (bsspagestart - bssstart), 0);
+      err = vm_allocate (t, &bsspagestart,
+			 hdr.a.a_bss - (bsspagestart - bssstart), 0);
+      assert_backtrace (err == KERN_SUCCESS);
 
       return hdr.a.a_entry;
     }
@@ -313,7 +327,8 @@ boot_script_exec_cmd (void *hook,
   arg_len += 5 * sizeof (intptr_t);
   stack_end = VM_MAX_ADDRESS;
   stack_start = VM_MAX_ADDRESS - 16 * 1024 * 1024;
-  vm_allocate (task, &stack_start, stack_end - stack_start, FALSE);
+  err = vm_allocate (task, &stack_start, stack_end - stack_start, FALSE);
+  assert_backtrace (err == KERN_SUCCESS);
   arg_pos = (void *) ((stack_end - arg_len) & ~(sizeof (intptr_t) - 1));
   args = mmap (0, stack_end - trunc_page ((vm_offset_t) arg_pos),
 	       PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
@@ -334,8 +349,10 @@ boot_script_exec_cmd (void *hook,
   p = (void *) p + sizeof (char *);
   memcpy (p, strings, stringlen);
   memset (args, 0, (vm_offset_t)arg_pos & (vm_page_size - 1));
-  vm_write (task, trunc_page ((vm_offset_t) arg_pos), (vm_address_t) args,
-	    stack_end - trunc_page ((vm_offset_t) arg_pos));
+  err = vm_write (task, trunc_page ((vm_offset_t) arg_pos), (vm_address_t) args,
+		  stack_end - trunc_page ((vm_offset_t) arg_pos));
+  assert_backtrace (err == KERN_SUCCESS);
+
   munmap ((caddr_t) args,
 	  stack_end - trunc_page ((vm_offset_t) arg_pos));
 

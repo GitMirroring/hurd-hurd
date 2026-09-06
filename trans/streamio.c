@@ -1046,7 +1046,11 @@ dev_read (size_t amount, void **buf, size_t *len, int nowait)
   avail = buffer_size (input_buffer);
   max = (amount < avail) ? amount : avail;
   if (max > *len)
-    vm_allocate (mach_task_self (), (vm_address_t *)buf, max, 1);
+    {
+      err = vm_allocate (mach_task_self (), (vm_address_t *)buf, max, 1);
+      if (err)
+        return err;
+    }
 
   *len = buffer_read (input_buffer, *buf, max);
   assert_backtrace (*len == max);

@@ -955,10 +955,16 @@ diskfs_get_directs (struct node *dp,
 	{
 	  vm_address_t newdata;
 
-	  vm_allocate (mach_task_self (), &newdata,
-		       (ouralloc
-			? (allocsize *= 2)
-			: (allocsize = vm_page_size * 2)), 1);
+	  err = vm_allocate (mach_task_self (), &newdata,
+			     (ouralloc
+			      ? (allocsize *= 2)
+			      : (allocsize = vm_page_size * 2)), 1);
+	  if (err)
+	    {
+	      munmap ((caddr_t) buf, buflen);
+	      return err;
+	    }
+
 	  memcpy ((void *) newdata, (void *) *data, datap - *data);
 
 	  if (ouralloc)
