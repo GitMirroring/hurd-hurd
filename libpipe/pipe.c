@@ -496,6 +496,17 @@ pipe_recv (struct pipe *pipe, int noblock, unsigned *flags, void **source,
   /* True if the user isn't asking for any `control' data.  */
   int data_only = (control == NULL && ports == NULL);
 
+  /* Nothing to do.  */
+  if (amount == 0)
+    {
+      *data_len = 0;
+      if (control_len)
+	*control_len = 0;
+      if (num_ports)
+	*num_ports = 0;
+      return 0;
+    }
+
   err = pipe_wait_readable (pipe, noblock, data_only);
   if (err)
     return err;
