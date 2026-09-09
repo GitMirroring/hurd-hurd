@@ -325,10 +325,14 @@ load_byte:
 				continue;
 
 			case BPF_ALU|BPF_DIV|BPF_K:
+				if (pc->k == 0)
+					return 0;
 				A /= pc->k;
 				continue;
 
 			case BPF_ALU|BPF_MOD|BPF_K:
+				if (pc->k == 0)
+					return 0;
 				A %= pc->k;
 				continue;
 
