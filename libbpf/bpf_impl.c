@@ -68,7 +68,7 @@ bpf_do_filter(net_rcv_port_t infp, char *p,	unsigned int wirelen,
 
 	unsigned int A, X;
 	int k;
-	unsigned int mem[BPF_MEMWORDS];
+	unsigned int mem[BPF_MEMWORDS] = {0};
 
 	/* Generic pointer to either HEADER or P according to the specified offset. */
 	char *data = NULL;
